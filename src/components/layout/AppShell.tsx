@@ -221,7 +221,9 @@ export default function AppShell() {
             )}
           </div>
         </header>
-        <main className="page-content">
+        <main
+          className={`page-content ${current.label === 'Calendar' ? 'calendar-page-content' : ''}`}
+        >
           <div className="page-heading">
             <div>
               <div className="eyebrow">CIAS WORKSPACE</div>

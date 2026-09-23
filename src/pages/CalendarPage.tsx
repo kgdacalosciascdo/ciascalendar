@@ -140,40 +140,42 @@ export function CalendarPage({
                 Today
               </button>
             </div>
-            <div className="view-switch">
-              {[
-                ['dayGridMonth', 'Month'],
-                ['timeGridWeek', 'Week'],
-                ['timeGridDay', 'Day'],
-              ].map(([key, label]) => (
+            <div className="calendar-toolbar-actions">
+              <div className="calendar-search">
+                <SearchInput value={search} onChange={setSearch} />
                 <button
-                  key={key}
-                  className={view === key ? 'active' : ''}
-                  aria-pressed={view === key}
-                  disabled={!!search}
-                  onClick={() => {
-                    setView(key)
-                    calendar.current?.getApi().changeView(key)
-                  }}
+                  className={`button small ${showFilters ? 'selected' : ''}`}
+                  onClick={() => setShowFilters(!showFilters)}
+                  aria-expanded={showFilters}
                 >
-                  {label}
+                  <SlidersHorizontal size={15} />
+                  Filters
+                  {activeFilters > 0 && (
+                    <span className="count-badge">{activeFilters}</span>
+                  )}
                 </button>
-              ))}
+              </div>
+              <div className="view-switch">
+                {[
+                  ['dayGridMonth', 'Month'],
+                  ['timeGridWeek', 'Week'],
+                  ['timeGridDay', 'Day'],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    className={view === key ? 'active' : ''}
+                    aria-pressed={view === key}
+                    disabled={!!search}
+                    onClick={() => {
+                      setView(key)
+                      calendar.current?.getApi().changeView(key)
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="calendar-search">
-            <SearchInput value={search} onChange={setSearch} />
-            <button
-              className={`button small ${showFilters ? 'selected' : ''}`}
-              onClick={() => setShowFilters(!showFilters)}
-              aria-expanded={showFilters}
-            >
-              <SlidersHorizontal size={15} />
-              Filters
-              {activeFilters > 0 && (
-                <span className="count-badge">{activeFilters}</span>
-              )}
-            </button>
           </div>
           {showFilters && (
             <div className="advanced-filters">
@@ -257,7 +259,7 @@ export function CalendarPage({
                   headerToolbar={false}
                   height="auto"
                   fixedWeekCount={false}
-                  dayMaxEvents={3}
+                  dayMaxEvents={2}
                   nowIndicator
                   slotMinTime="06:00:00"
                   slotMaxTime="21:00:00"
