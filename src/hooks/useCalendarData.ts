@@ -22,7 +22,11 @@ export function useCalendarData() {
   const reload = useCallback(async () => {
     setError('')
     try {
-      setData(isDemo ? readDemo() : await fetchData(profile?.role === 'admin'))
+      setData(
+        isDemo
+          ? readDemo()
+          : await fetchData(profile?.role === 'admin', !profile),
+      )
     } catch (problem) {
       setError(
         problem instanceof Error
@@ -39,7 +43,7 @@ export function useCalendarData() {
   useEffect(() => {
     if (isDemo) return
     let alive = true
-    fetchData(profile?.role === 'admin')
+    fetchData(profile?.role === 'admin', !profile)
       .then((result) => {
         if (alive) setData(result)
       })

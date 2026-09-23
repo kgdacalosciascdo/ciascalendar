@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   CircleHelp,
   LayoutGrid,
+  LogIn,
   LogOut,
   Menu,
   Plus,
@@ -14,7 +15,14 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import {
+  Link,
+  NavLink,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom'
 import { useAuth } from '../../features/auth/context'
 import { useCalendarData } from '../../hooks/useCalendarData'
 import { isDemo } from '../../lib/supabase'
@@ -59,7 +67,6 @@ const navigation = [
     label: 'Settings',
     icon: Settings2,
     description: 'Your account, connection, and activity history.',
-    admin: true,
   },
 ]
 export default function AppShell() {
@@ -113,7 +120,11 @@ export default function AppShell() {
         <div className="workspace-label">WORKSPACE</div>
         <nav aria-label="Main navigation">
           {navigation
-            .filter((n) => !n.admin || admin)
+            .filter((n) =>
+              profile
+                ? !n.admin || admin
+                : ['/calendar', '/upcoming'].includes(n.path),
+            )
             .map((item) => (
               <NavLink
                 key={item.path}
@@ -175,30 +186,39 @@ export default function AppShell() {
             <strong>{current.label}</strong>
           </div>
           <div className="header-user">
-            <span className="office-tag">
-              <span className="dot" />
-              {isDemo ? 'Demo workspace' : 'Office workspace'}
-            </span>
-            <span className="header-divider" />
-            <span className="avatar user-avatar">
-              {profile?.full_name
-                .split(' ')
-                .slice(0, 2)
-                .map((n) => n[0])
-                .join('')}
-            </span>
-            <div className="user-text">
-              <strong>{profile?.full_name}</strong>
-              <small>{admin ? 'Administrator' : 'Staff · View only'}</small>
-            </div>
-            <button
-              className="icon-button"
-              aria-label="Sign out"
-              title="Sign out"
-              onClick={signOut}
-            >
-              <LogOut size={17} />
-            </button>
+            {profile ? (
+              <>
+                <span className="office-tag">
+                  <span className="dot" />
+                  {isDemo ? 'Demo workspace' : 'Office workspace'}
+                </span>
+                <span className="header-divider" />
+                <span className="avatar user-avatar">
+                  {profile.full_name
+                    .split(' ')
+                    .slice(0, 2)
+                    .map((n) => n[0])
+                    .join('')}
+                </span>
+                <div className="user-text">
+                  <strong>{profile.full_name}</strong>
+                  <small>{admin ? 'Administrator' : 'Staff · View only'}</small>
+                </div>
+                <button
+                  className="icon-button"
+                  aria-label="Sign out"
+                  title="Sign out"
+                  onClick={signOut}
+                >
+                  <LogOut size={17} />
+                </button>
+              </>
+            ) : (
+              <Link className="button small" to="/login">
+                <LogIn size={16} />
+                Sign in
+              </Link>
+            )}
           </div>
         </header>
         <main className="page-content">
@@ -259,7 +279,15 @@ export default function AppShell() {
               <Route
                 path="/employees"
                 element={
-                  <EmployeesPage data={data} admin={admin} notify={setToast} />
+                  profile ? (
+                    <EmployeesPage
+                      data={data}
+                      admin={admin}
+                      notify={setToast}
+                    />
+                  ) : (
+                    <Navigate to="/calendar" replace />
+                  )
                 }
               />
               <Route
@@ -275,7 +303,7 @@ export default function AppShell() {
               <Route
                 path="/settings"
                 element={
-                  admin ? (
+                  profile ? (
                     <SettingsPage data={data} />
                   ) : (
                     <Navigate to="/calendar" replace />

@@ -1,16 +1,28 @@
 import { supabase } from '../lib/supabase'
 import type { AppData, CalendarEvent, Employee, EventCategory } from '../types'
 
-export async function fetchData(admin: boolean): Promise<AppData> {
+export async function fetchData(
+  admin: boolean,
+  publicView = false,
+): Promise<AppData> {
   if (!supabase) throw new Error('Supabase is not configured.')
+  const events = publicView
+    ? supabase
+        .from('events')
+        .select('*, employee_leave_details(*), holiday_details(*)')
+        .order('start_date')
+    : supabase
+        .from('events')
+        .select(
+          '*, employee_leave_details(*), holiday_details(*), creator:profiles!events_created_by_fkey(full_name)',
+        )
+        .order('start_date')
+  const employees = publicView
+    ? supabase.rpc('get_public_calendar_employees')
+    : supabase.from('employees').select('*').order('last_name')
   const results = await Promise.all([
-    supabase
-      .from('events')
-      .select(
-        '*, employee_leave_details(*), holiday_details(*), creator:profiles!events_created_by_fkey(full_name)',
-      )
-      .order('start_date'),
-    supabase.from('employees').select('*').order('last_name'),
+    events,
+    employees,
     supabase.from('event_categories').select('*').order('name'),
     admin
       ? supabase

@@ -1,12 +1,12 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { useAuth } from './features/auth/context'
 import { LoginPage } from './pages/LoginPage'
 import { LoadingSpinner } from './components/ui/Shared'
 const AppShell = lazy(() => import('./components/layout/AppShell'))
 function AppRoutes() {
-  const { profile, loading } = useAuth()
+  const { loading } = useAuth()
   if (loading) return <LoadingSpinner />
   return (
     <Routes>
@@ -14,13 +14,9 @@ function AppRoutes() {
       <Route
         path="/*"
         element={
-          profile ? (
-            <Suspense fallback={<LoadingSpinner />}>
-              <AppShell />
-            </Suspense>
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <Suspense fallback={<LoadingSpinner />}>
+            <AppShell />
+          </Suspense>
         }
       />
     </Routes>

@@ -5,7 +5,7 @@ test('admin creates, edits, persists, filters, and deletes an event', async ({
 }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/')
+  await page.goto('/login')
   await page.getByRole('button', { name: 'Open admin demo' }).click()
   await expect(
     page.getByRole('heading', { name: 'Office calendar' }),
@@ -115,6 +115,14 @@ test('staff has read-only routes and the mobile layout fits the screen', async (
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  await expect(
+    page.getByRole('heading', { name: 'Office calendar' }),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Add event', exact: true }),
+  ).toHaveCount(0)
+  await page.getByRole('link', { name: 'Sign in' }).click()
   await page.getByRole('button', { name: 'Preview as read-only staff' }).click()
   await expect(
     page.getByRole('heading', { name: 'Office calendar' }),
@@ -138,5 +146,6 @@ test('staff has read-only routes and the mobile layout fits the screen', async (
   await page.goto('/categories')
   await expect(page).toHaveURL(/\/calendar$/)
   await page.getByRole('button', { name: 'Sign out' }).click()
-  await expect(page).toHaveURL(/\/login$/)
+  await expect(page).toHaveURL(/\/calendar$/)
+  await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible()
 })

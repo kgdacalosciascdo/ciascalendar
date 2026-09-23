@@ -266,4 +266,32 @@ describe('PostgreSQL migration, atomic saves, and RLS', () => {
     await expect(db.query('select * from events')).rejects.toThrow()
     await expect(save()).rejects.toThrow()
   })
+  it('enables anonymous users to read only the office calendar after the public-display migration', async () => {
+    await db.exec('reset role')
+    await db.exec(
+      readFileSync(
+        'supabase/migrations/202609230001_public_calendar_read.sql',
+        'utf8',
+      ),
+    )
+    await actAs('', 'anon')
+    expect(
+      (await db.query('select * from events')).rows.length,
+    ).toBeGreaterThan(0)
+    expect(
+      (await db.query('select * from event_categories')).rows.length,
+    ).toBeGreaterThan(0)
+    const publicEmployees = await db.query<{ email: string }>(
+      'select * from get_public_calendar_employees()',
+    )
+    expect(publicEmployees.rows.length).toBeGreaterThan(0)
+    expect(
+      publicEmployees.rows.every((employee) => employee.email === ''),
+    ).toBe(true)
+    await expect(
+      db.query(
+        "insert into event_categories(name,color) values('No','#ffffff')",
+      ),
+    ).rejects.toThrow()
+  })
 })

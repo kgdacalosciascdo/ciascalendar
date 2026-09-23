@@ -48,30 +48,32 @@ export function SettingsPage({ data }: { data: CalendarData }) {
         )}
       </section>
       <ChangePassword />
-      <section className="content-panel activity-panel">
-        <div className="section-heading">
-          <h2>Activity history</h2>
-          <span className="muted">Latest 100 actions</span>
-        </div>
-        {data.logs.length ? (
-          <div className="activity-list">
-            {data.logs.slice(0, 100).map((log) => (
-              <div className="activity-item" key={log.id}>
-                <span className="activity-dot" />
-                <div>
-                  <p>{log.description}</p>
-                  <small>{new Date(log.created_at).toLocaleString()}</small>
-                </div>
-              </div>
-            ))}
+      {profile?.role === 'admin' && (
+        <section className="content-panel activity-panel">
+          <div className="section-heading">
+            <h2>Activity history</h2>
+            <span className="muted">Latest 100 actions</span>
           </div>
-        ) : (
-          <EmptyState
-            title="No activity yet"
-            description="Administrator changes will be recorded here."
-          />
-        )}
-      </section>
+          {data.logs.length ? (
+            <div className="activity-list">
+              {data.logs.slice(0, 100).map((log) => (
+                <div className="activity-item" key={log.id}>
+                  <span className="activity-dot" />
+                  <div>
+                    <p>{log.description}</p>
+                    <small>{new Date(log.created_at).toLocaleString()}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No activity yet"
+              description="Administrator changes will be recorded here."
+            />
+          )}
+        </section>
+      )}
     </div>
   )
 }
@@ -160,7 +162,11 @@ function ChangePassword() {
             disabled={busy}
           />
         </label>
-        {error && <div className="error-banner" role="alert">{error}</div>}
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+          </div>
+        )}
         {success && (
           <p className="password-success" role="status">
             <CheckCircle2 size={16} /> Password changed successfully.

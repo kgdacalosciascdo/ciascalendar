@@ -9,12 +9,14 @@ npm install
 npm run dev
 ```
 
+The default page is the shared, read-only office calendar. On the same network, open the Vite **Network** address shown in the terminal (for example `http://192.168.1.25:5173`) from another office device. Select **Sign in** to manage calendar data. For a lasting office deployment, serve the built `dist/` folder through Laragon/Apache and make that computer's local address available to the network.
+
 Without Supabase environment values, the login screen offers **Open admin demo** and **Preview as read-only staff**. These are explicitly labeled local previews, not authenticated production accounts. Demo changes persist in this browser's local storage; the selected demo role persists in the tab session. There is no hardcoded admin password. Supplying credentials for your existing Supabase project removes the demo entry points entirely.
 
 ## Connect Supabase and enable real login
 
 1. Use your existing Supabase project; no additional project is required.
-2. Run `supabase/migrations/202609220001_calendar.sql` in that project's Supabase SQL Editor, or apply it with the Supabase CLI. It creates the calendar tables, policies, functions, profile trigger, audit triggers, and the ten default categories. Review it first if your project already has a `public.profiles` table, since the calendar uses `profiles.id`, `full_name`, and `role`.
+2. Run `supabase/migrations/202609220001_calendar.sql`, then `supabase/migrations/202609230001_public_calendar_read.sql`, in that project's Supabase SQL Editor, or apply them with the Supabase CLI. The first creates the calendar tables, policies, functions, profile trigger, audit triggers, and the ten default categories. The second enables the read-only office calendar shown before sign-in. Review the first migration if your project already has a `public.profiles` table, since the calendar uses `profiles.id`, `full_name`, and `role`.
 3. In **Authentication → Providers / Sign In**, disable public email sign-ups. Do not enable anonymous sign-ins. The app has no registration screen; this project setting also blocks direct API registration.
 4. In **Authentication → Users**, use your existing user accounts or manually add an administrator with an email and password. The calendar shows a standard **Email address / Password** form and signs in directly with the supplied email. Set `full_name` in user metadata if desired. The profile trigger creates every new account as `staff`; metadata cannot grant admin access.
 5. In the SQL Editor, promote your chosen account using its actual email:
@@ -51,7 +53,8 @@ Supabase Auth still stores password hashes and handles the session securely; the
 
 ## Features
 
-- Protected routes, persistent Supabase sessions, sign-out, user profile, admin/staff roles.
+- A public, read-only calendar landing page with the upcoming list visible before sign-in. It includes office-visible events and employee display names; it does not expose the employee directory, email addresses, admin-only events, or write controls.
+- Protected management routes, persistent Supabase sessions, sign-out, user profile, admin/staff roles.
 - Signed-in users can change their password from Settings by entering their current password and a confirmed replacement.
 - FullCalendar month, week, and day views with navigation and clickable entries.
 - Admin create, edit, and confirmed delete; staff read-only access.
