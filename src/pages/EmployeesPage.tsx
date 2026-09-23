@@ -16,11 +16,14 @@ export function EmployeesPage({
   notify: (message: string) => void
 }) {
   const [search, setSearch] = useState('')
+  const [showInactive, setShowInactive] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
-  const filtered = data.employees.filter((e) =>
-    `${employeeName(e)} ${e.employee_number} ${e.department} ${e.email}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
+  const filtered = data.employees.filter(
+    (employee) =>
+      (showInactive || employee.active) &&
+      `${employeeName(employee)} ${employee.employee_number} ${employee.department} ${employee.email}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
   )
   return (
     <div className="content-panel">
@@ -30,6 +33,14 @@ export function EmployeesPage({
           onChange={setSearch}
           placeholder="Search employees…"
         />
+        <label className="checkbox-label employee-filter-toggle">
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(event) => setShowInactive(event.target.checked)}
+          />
+          Show inactive
+        </label>
         {admin && (
           <button
             className="button primary"

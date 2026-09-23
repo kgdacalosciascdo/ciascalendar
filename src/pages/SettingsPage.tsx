@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
   CheckCircle2,
   Database,
@@ -10,10 +10,16 @@ import { useAuth } from '../features/auth/context'
 import { isDemo } from '../lib/supabase'
 import type { CalendarData } from '../hooks/useCalendarData'
 import { EmptyState } from '../components/ui/Shared'
-import { createUserAccount } from '../services/data'
+import {
+  createUserAccount,
+  getManagedUsers,
+  setUserActive,
+} from '../services/data'
+import type { ManagedUser } from '../types'
 
 export function SettingsPage({ data }: { data: CalendarData }) {
   const { profile } = useAuth()
+  const [accountRefresh, setAccountRefresh] = useState(0)
   return (
     <div className="settings-layout">
       <section className="content-panel settings-card">
@@ -55,7 +61,12 @@ export function SettingsPage({ data }: { data: CalendarData }) {
         )}
       </section>
       <ChangePassword />
-      {profile?.role === 'admin' && <AddUser />}
+      {profile?.role === 'admin' && (
+        <AddUser onCreated={() => setAccountRefresh((count) => count + 1)} />
+      )}
+      {profile?.role === 'admin' && (
+        <UserAccounts currentUserId={profile.id} reloadKey={accountRefresh} />
+      )}
       {profile?.role === 'admin' && (
         <section className="content-panel activity-panel">
           <div className="section-heading">
@@ -86,7 +97,7 @@ export function SettingsPage({ data }: { data: CalendarData }) {
   )
 }
 
-function AddUser() {
+function AddUser({ onCreated }: { onCreated: () => void }) {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -114,6 +125,7 @@ function AddUser() {
       setPassword('')
       setBirthDate('')
       setRole('staff')
+      onCreated()
     } catch (problem) {
       setError(
         problem instanceof Error ? problem.message : 'Unable to add user.',
@@ -201,6 +213,118 @@ function AddUser() {
           {busy ? 'Creating user…' : 'Add user'}
         </button>
       </form>
+    </section>
+  )
+}
+
+function UserAccounts({
+  currentUserId,
+  reloadKey,
+}: {
+  currentUserId: string
+  reloadKey: number
+}) {
+  const [users, setUsers] = useState<ManagedUser[]>([])
+  const [busyId, setBusyId] = useState('')
+  const [error, setError] = useState('')
+  useEffect(() => {
+    if (isDemo) return
+    let live = true
+    void getManagedUsers()
+      .then((accounts) => {
+        if (live) {
+          setUsers(accounts)
+          setError('')
+        }
+      })
+      .catch((problem) => {
+        if (live)
+          setError(
+            problem instanceof Error
+              ? problem.message
+              : 'Unable to load user accounts.',
+          )
+      })
+    return () => {
+      live = false
+    }
+  }, [reloadKey])
+  async function toggleUser(account: ManagedUser) {
+    setBusyId(account.id)
+    setError('')
+    try {
+      await setUserActive(account.id, !account.active)
+      setUsers((accounts) =>
+        accounts.map((item) =>
+          item.id === account.id ? { ...item, active: !item.active } : item,
+        ),
+      )
+    } catch (problem) {
+      setError(
+        problem instanceof Error
+          ? problem.message
+          : 'Unable to update this user.',
+      )
+    } finally {
+      setBusyId('')
+    }
+  }
+  return (
+    <section className="content-panel settings-card user-accounts-card">
+      <h2>User accounts</h2>
+      <p>
+        Inactive users cannot sign in and are removed from current employee
+        selections. Their previous calendar entries stay in the calendar.
+      </p>
+      {isDemo ? (
+        <p className="muted">User account management requires Supabase.</p>
+      ) : (
+        <>
+          {error && (
+            <div className="error-banner" role="alert">
+              {error}
+            </div>
+          )}
+          <div className="user-account-list">
+            {users.map((account) => (
+              <div className="user-account-row" key={account.id}>
+                <div>
+                  <strong>{account.full_name}</strong>
+                  <small>
+                    {account.email || 'No email'} · {account.role}
+                  </small>
+                </div>
+                <div className="user-account-actions">
+                  <span
+                    className={`status-badge ${!account.active ? 'inactive' : ''}`}
+                  >
+                    {account.active ? 'Active' : 'Inactive'}
+                  </span>
+                  <button
+                    className="button small"
+                    type="button"
+                    disabled={
+                      busyId === account.id || account.id === currentUserId
+                    }
+                    title={
+                      account.id === currentUserId
+                        ? 'You cannot deactivate your own account.'
+                        : undefined
+                    }
+                    onClick={() => void toggleUser(account)}
+                  >
+                    {busyId === account.id
+                      ? 'Saving…'
+                      : account.active
+                        ? 'Set inactive'
+                        : 'Set active'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </section>
   )
 }

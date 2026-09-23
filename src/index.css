@@ -1055,6 +1055,42 @@ td small {
   font-size: 12px !important;
   margin: 0 0 14px !important;
 }
+.user-accounts-card {
+  grid-column: 1/-1;
+}
+.user-account-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.user-account-row,
+.user-account-actions {
+  display: flex;
+  align-items: center;
+}
+.user-account-row {
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #e3eadc;
+  border-radius: 8px;
+  padding: 11px 13px;
+}
+.user-account-row strong,
+.user-account-row small {
+  display: block;
+}
+.user-account-row small {
+  margin-top: 3px;
+  color: #7a9065;
+}
+.user-account-actions {
+  gap: 9px;
+  flex-shrink: 0;
+}
+.employee-filter-toggle {
+  margin: 0;
+  white-space: nowrap;
+}
 .settings-card dl {
   display: grid;
   grid-template-columns: 100px 1fr;

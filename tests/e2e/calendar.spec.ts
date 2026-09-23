@@ -107,6 +107,7 @@ test('leave and holiday forms, employee and category management, and calendar vi
   await page.getByRole('button', { name: 'Edit Test Person' }).click()
   await page.getByLabel('Active employee').uncheck()
   await page.getByRole('button', { name: 'Save employee' }).click()
+  await page.getByLabel('Show inactive').check()
   await expect(
     page.getByRole('row').filter({ hasText: 'Test Person' }),
   ).toContainText('Inactive')

@@ -358,4 +358,29 @@ describe('PostgreSQL migration, atomic saves, and RLS', () => {
       birthdays.rows.some((birthday) => birthday.start_date.endsWith('-02-28')),
     ).toBe(true)
   })
+
+  it('keeps history while excluding inactive accounts from recurring birthdays', async () => {
+    await db.exec('reset role')
+    await db.exec(
+      readFileSync(
+        'supabase/migrations/202609230004_inactive_user_accounts.sql',
+        'utf8',
+      ),
+    )
+    const eventCount = (await db.query('select * from events')).rows.length
+    await db.query('update public.profiles set active=false where id=$1', [
+      adminId,
+    ])
+    expect((await db.query('select * from events')).rows).toHaveLength(
+      eventCount,
+    )
+    await actAs('', 'anon')
+    expect(
+      (
+        await db.query(
+          "select * from public.get_recurring_birthday_events() where title like 'Calendar Birthday User%'",
+        )
+      ).rows,
+    ).toHaveLength(0)
+  })
 })

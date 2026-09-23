@@ -4,7 +4,12 @@ export interface UserProfile {
   full_name: string
   role: Role
   birth_date?: string | null
+  active?: boolean
   email?: string
+}
+export interface ManagedUser extends UserProfile {
+  email: string
+  active: boolean
 }
 export interface Employee {
   id: string

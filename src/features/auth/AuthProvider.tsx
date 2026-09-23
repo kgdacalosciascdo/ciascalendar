@@ -42,6 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(
           'Your account has no accessible profile. Ask your administrator to check the database setup.',
         )
+      } else if (data.active === false) {
+        setProfile(null)
+        setError('This account is inactive. Ask an administrator for access.')
+        void client.auth.signOut()
       } else {
         setProfile({ ...data, email } as UserProfile)
         setError('')
@@ -81,7 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   async function changePassword(currentPassword: string, newPassword: string) {
     if (!supabase) {
-      throw new Error('Password changes are available after Supabase is connected.')
+      throw new Error(
+        'Password changes are available after Supabase is connected.',
+      )
     }
     const { error: problem } = await supabase.auth.updateUser({
       password: newPassword,

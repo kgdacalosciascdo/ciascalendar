@@ -40,16 +40,104 @@ Deno.serve(async (request) => {
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('role')
+    .select('role, active')
     .eq('id', user.id)
     .maybeSingle()
-  if (profile?.role !== 'admin')
+  if (profile?.role !== 'admin' || !profile.active)
     return Response.json(
       { error: 'Administrator access is required.' },
       { status: 403, headers: corsHeaders },
     )
 
   const body = await request.json()
+  if (body.action === 'list') {
+    const { data: profiles, error: profilesError } = await admin
+      .from('profiles')
+      .select('id, full_name, role, birth_date, active')
+      .order('full_name')
+    if (profilesError)
+      return Response.json(
+        { error: profilesError.message },
+        { status: 500, headers: corsHeaders },
+      )
+    const users = []
+    for (let page = 1; ; page += 1) {
+      const { data, error } = await admin.auth.admin.listUsers({
+        page,
+        perPage: 1000,
+      })
+      if (error)
+        return Response.json(
+          { error: error.message },
+          { status: 500, headers: corsHeaders },
+        )
+      users.push(...data.users)
+      if (data.users.length < 1000) break
+    }
+    const emails = new Map(users.map((account) => [account.id, account.email]))
+    return Response.json(
+      {
+        users: (profiles || []).map((account) => ({
+          ...account,
+          email: emails.get(account.id) || '',
+        })),
+      },
+      { headers: corsHeaders },
+    )
+  }
+  if (body.action === 'set-active') {
+    const targetId = typeof body.user_id === 'string' ? body.user_id : ''
+    const active = typeof body.active === 'boolean' ? body.active : null
+    if (!targetId || active === null)
+      return Response.json(
+        { error: 'User and active status are required.' },
+        { status: 400, headers: corsHeaders },
+      )
+    if (targetId === user.id && !active)
+      return Response.json(
+        { error: 'You cannot deactivate your own account.' },
+        { status: 400, headers: corsHeaders },
+      )
+    const { data: target, error: targetError } =
+      await admin.auth.admin.getUserById(targetId)
+    if (targetError || !target.user)
+      return Response.json(
+        { error: targetError?.message || 'User not found.' },
+        { status: 404, headers: corsHeaders },
+      )
+    const { error: authError } = await admin.auth.admin.updateUserById(
+      targetId,
+      {
+        ban_duration: active ? 'none' : '876000h',
+      },
+    )
+    if (authError)
+      return Response.json(
+        { error: authError.message },
+        { status: 500, headers: corsHeaders },
+      )
+    const { error: activeError } = await admin
+      .from('profiles')
+      .update({ active })
+      .eq('id', targetId)
+    if (activeError)
+      return Response.json(
+        { error: activeError.message },
+        { status: 500, headers: corsHeaders },
+      )
+    if (target.user.email) {
+      const { error: employeeError } = await admin
+        .from('employees')
+        .update({ active })
+        .ilike('email', target.user.email)
+      if (employeeError)
+        return Response.json(
+          { error: employeeError.message },
+          { status: 500, headers: corsHeaders },
+        )
+    }
+    return Response.json({ id: targetId, active }, { headers: corsHeaders })
+  }
   const email =
     typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   const password = typeof body.password === 'string' ? body.password : ''
@@ -87,6 +175,7 @@ Deno.serve(async (request) => {
     id: data.user.id,
     full_name: fullName,
     birth_date: birthDate,
+    active: true,
     role,
   })
   if (profileError)

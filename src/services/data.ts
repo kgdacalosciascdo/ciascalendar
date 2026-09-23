@@ -1,5 +1,11 @@
 import { supabase } from '../lib/supabase'
-import type { AppData, CalendarEvent, Employee, EventCategory } from '../types'
+import type {
+  AppData,
+  CalendarEvent,
+  Employee,
+  EventCategory,
+  ManagedUser,
+} from '../types'
 
 export async function createUserAccount(input: {
   full_name: string
@@ -11,6 +17,23 @@ export async function createUserAccount(input: {
   if (!supabase) throw new Error('Supabase is not configured.')
   const { data, error } = await supabase.functions.invoke('admin-users', {
     body: input,
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+}
+export async function getManagedUsers(): Promise<ManagedUser[]> {
+  if (!supabase) throw new Error('Supabase is not configured.')
+  const { data, error } = await supabase.functions.invoke('admin-users', {
+    body: { action: 'list' },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data?.users || []
+}
+export async function setUserActive(id: string, active: boolean) {
+  if (!supabase) throw new Error('Supabase is not configured.')
+  const { data, error } = await supabase.functions.invoke('admin-users', {
+    body: { action: 'set-active', user_id: id, active },
   })
   if (error) throw error
   if (data?.error) throw new Error(data.error)
