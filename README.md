@@ -36,6 +36,15 @@ Without Supabase environment values, the login screen offers **Open admin demo**
 
    Never use a service-role or secret key in frontend environment variables.
 
+   To create a login automatically when an administrator adds an employee on the deployed Vercel site, add these **Vercel Project → Settings → Environment Variables**. Do not prefix either variable with `VITE_`:
+
+   ```text
+   SUPABASE_URL=https://your-project-ref.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   ```
+
+   These values are used only by Vercel's server-side `/api/create-employee` route. It verifies that the caller is a signed-in calendar administrator, creates the Auth account with temporary password `cias2026`, and adds the employee record.
+
 7. Restart Vite, then sign in with the email and password from your account. Additional users created through Supabase receive staff access by default. Existing auth users also receive staff profiles when the migration runs.
 
    To add a login without an Edge Function, open **Authentication → Users** in Supabase Dashboard and choose **Add user**. Enter the employee email and a temporary password such as `cias2026`, then create the matching employee record in CIAS CALENDAR using the same email. The profile trigger gives new Auth users `staff` access by default. Use the SQL command in step 5 when an account needs administrator access.
@@ -66,6 +75,7 @@ Supabase Auth still stores password hashes and handles the session securely; the
 - Category toggles, employee/status/date filters, and search across dates, titles, employees, descriptions, and locations.
 - Upcoming entries grouped by today, tomorrow, this week, and later.
 - Employee creation, editing, search, and deactivation without destroying history.
+- Adding an employee on Vercel creates a matching email/password login automatically; administrators set the employee email and the new account starts with `cias2026`.
 - Multiple employee participants per calendar event, with individual and Select all controls. Employee leave remains linked to exactly one employee.
 - Each employee has a birthday; Birthday entries are generated automatically each year from the employee record.
 - Category creation, color/icon configuration, and deactivation. The system names `Employee Leave` and `Holiday` are fixed because they determine conditional fields.

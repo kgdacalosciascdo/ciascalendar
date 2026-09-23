@@ -1,6 +1,25 @@
 import { supabase } from '../lib/supabase'
 import type { AppData, CalendarEvent, Employee, EventCategory } from '../types'
 
+export async function createEmployeeAccount(employee: Employee) {
+  if (!supabase) throw new Error('Supabase is not configured.')
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) throw new Error('Sign in is required.')
+  const response = await fetch('/api/create-employee', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(employee),
+  })
+  const result = (await response.json()) as { error?: string }
+  if (!response.ok)
+    throw new Error(result.error || 'Unable to create the employee account.')
+}
+
 export async function fetchData(
   admin: boolean,
   publicView = false,

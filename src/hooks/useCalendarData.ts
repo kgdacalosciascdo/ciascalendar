@@ -3,6 +3,7 @@ import { useAuth } from '../features/auth/context'
 import { isDemo } from '../lib/supabase'
 import { readDemo, writeDemo } from '../lib/demo'
 import {
+  createEmployeeAccount,
   fetchData,
   persistEvent,
   persistRecord,
@@ -133,7 +134,9 @@ export function useCalendarData() {
   async function saveEmployee(employee: Employee) {
     requireAdmin()
     if (!isDemo) {
-      await persistRecord('employees', employee)
+      const exists = data.employees.some((item) => item.id === employee.id)
+      if (exists) await persistRecord('employees', employee)
+      else await createEmployeeAccount(employee)
       await reload()
       return
     }

@@ -167,10 +167,13 @@ function EmployeeForm({
       if (
         !value.first_name.trim() ||
         !value.last_name.trim() ||
-        !value.employee_number.trim()
+        !value.employee_number.trim() ||
+        (!employee.employee_number && !value.email.trim())
       )
         throw new Error(
-          'Employee number, first name, and last name are required.',
+          employee.employee_number
+            ? 'Employee number, first name, and last name are required.'
+            : 'Employee number, name, and email address are required to create a login.',
         )
       await onSave({
         ...value,
@@ -192,7 +195,9 @@ function EmployeeForm({
       busy={busy}
     >
       <p className="modal-description">
-        Maintain employee information for calendar entries and leaves.
+        {employee.employee_number
+          ? 'Maintain employee information for calendar entries and leaves.'
+          : 'Adding an employee also creates their login with the temporary password cias2026.'}
       </p>
       <form onSubmit={submit}>
         <fieldset disabled={busy}>
