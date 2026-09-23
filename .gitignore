@@ -30,3 +30,5 @@ playwright-report/
 *.njsproj
 *.sln
 *.sw?
+
+supabase/.temp/

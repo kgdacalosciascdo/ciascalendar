@@ -38,13 +38,7 @@ Without Supabase environment values, the login screen offers **Open admin demo**
 
 7. Restart Vite, then sign in with the email and password from your account. Additional users created through Supabase receive staff access by default. Existing auth users also receive staff profiles when the migration runs.
 
-   To enable the administrator **Add user** form, deploy the included secure Edge Function from a machine with the Supabase CLI authenticated to your project:
-
-   ```sh
-   supabase functions deploy admin-users
-   ```
-
-   The function verifies that the caller is an administrator before creating a Supabase Auth email/password account. It uses the service-role key only inside Supabase Edge Functions; do not place that key in browser variables.
+   To add a login without an Edge Function, open **Authentication → Users** in Supabase Dashboard and choose **Add user**. Enter the employee email and a temporary password such as `cias2026`, then create the matching employee record in CIAS CALENDAR using the same email. The profile trigger gives new Auth users `staff` access by default. Use the SQL command in step 5 when an account needs administrator access.
 
 8. To create the CIAS employee accounts and employee records, copy `.env.seed.example` to `.env.seed`, enter the existing project's service-role key, then run:
 
@@ -73,8 +67,6 @@ Supabase Auth still stores password hashes and handles the session securely; the
 - Upcoming entries grouped by today, tomorrow, this week, and later.
 - Employee creation, editing, search, and deactivation without destroying history.
 - Multiple employee participants per calendar event, with individual and Select all controls. Employee leave remains linked to exactly one employee.
-- Administrators can add email/password users from Settings after deploying the `admin-users` Edge Function.
-- Administrators can deactivate users from Settings. This blocks sign-in, hides their matching employee record from current selections, and retains earlier calendar records.
 - Each employee has a birthday; Birthday entries are generated automatically each year from the employee record.
 - Category creation, color/icon configuration, and deactivation. The system names `Employee Leave` and `Holiday` are fixed because they determine conditional fields.
 - Database-generated activity history, notifications, loading/error/empty states, keyboard-accessible dialogs, and responsive navigation.
