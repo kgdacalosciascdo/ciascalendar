@@ -55,6 +55,7 @@ export function EmployeesPage({
                 position: '',
                 department: '',
                 email: '',
+                birth_date: null,
                 active: true,
               })
             }
@@ -206,15 +207,22 @@ function EmployeeForm({
                 ['position', 'Position', false],
                 ['department', 'Department', false],
                 ['email', 'Email', false],
+                ['birth_date', 'Birthday', false],
               ] as const
             ).map(([key, label, required]) => (
               <label key={key}>
                 {label}
                 {required && ' *'}
                 <input
-                  type={key === 'email' ? 'email' : 'text'}
+                  type={
+                    key === 'email'
+                      ? 'email'
+                      : key === 'birth_date'
+                        ? 'date'
+                        : 'text'
+                  }
                   required={required}
-                  value={value[key]}
+                  value={value[key] || ''}
                   onChange={(e) =>
                     setValue({ ...value, [key]: e.target.value })
                   }
