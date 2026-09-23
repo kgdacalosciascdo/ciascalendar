@@ -457,6 +457,11 @@ svg {
   gap: 22px;
   align-items: start;
 }
+.calendar-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .calendar-panel {
   border: 1px solid #e1e7e2;
   border-radius: 9px;
@@ -760,7 +765,8 @@ svg {
   font-size: 10px;
 }
 .upcoming-aside {
-  margin-top: 17px;
+  order: -1;
+  margin-top: 0;
   padding-bottom: 0;
 }
 .count-badge {
@@ -824,19 +830,20 @@ svg {
   border: 0;
   border-bottom: 1px solid #edf1e9;
   border-radius: 0;
-  padding: 17px 0;
+  padding: 10px 0;
   gap: 10px;
 }
 .event-card.compact strong {
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.35;
 }
 .event-card.compact small {
-  font-size: 10px;
+  font-size: 11px;
+  margin-top: 4px;
 }
 .event-card.compact .event-card-top {
-  font-size: 9px;
-  margin-bottom: 5px;
+  font-size: 10px;
+  margin-bottom: 3px;
 }
 .event-card.compact .event-card-top svg {
   display: none;
