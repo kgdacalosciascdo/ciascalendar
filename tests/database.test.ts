@@ -333,4 +333,29 @@ describe('PostgreSQL migration, atomic saves, and RLS', () => {
       ),
     ).rejects.toThrow()
   })
+
+  it('generates recurring public birthday events from user profiles', async () => {
+    await db.exec('reset role')
+    await db.exec(
+      readFileSync(
+        'supabase/migrations/202609230003_recurring_birthdays.sql',
+        'utf8',
+      ),
+    )
+    await db.query(
+      "update public.profiles set full_name='Calendar Birthday User', birth_date='1992-02-29' where id=$1",
+      [adminId],
+    )
+    await actAs('', 'anon')
+    const birthdays = await db.query<{ title: string; start_date: string }>(
+      "select title, start_date::text from public.get_recurring_birthday_events() where title like 'Calendar Birthday User%' order by start_date",
+    )
+    expect(birthdays.rows).toHaveLength(3)
+    expect(
+      birthdays.rows.every((birthday) => birthday.title.includes('Birthday')),
+    ).toBe(true)
+    expect(
+      birthdays.rows.some((birthday) => birthday.start_date.endsWith('-02-28')),
+    ).toBe(true)
+  })
 })

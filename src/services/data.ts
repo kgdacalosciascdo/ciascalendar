@@ -6,6 +6,7 @@ export async function createUserAccount(input: {
   email: string
   password: string
   role: 'admin' | 'staff'
+  birth_date: string
 }) {
   if (!supabase) throw new Error('Supabase is not configured.')
   const { data, error } = await supabase.functions.invoke('admin-users', {
@@ -40,6 +41,7 @@ export async function fetchData(
     events,
     employees,
     supabase.from('event_categories').select('*').order('name'),
+    supabase.rpc('get_recurring_birthday_events'),
     admin
       ? supabase
           .from('activity_logs')
@@ -50,10 +52,16 @@ export async function fetchData(
   ])
   for (const result of results) if (result.error) throw result.error
   return {
-    events: results[0].data as CalendarEvent[],
+    events: [
+      ...((results[0].data ?? []) as CalendarEvent[]),
+      ...((results[3].data ?? []) as CalendarEvent[]).map((event) => ({
+        ...event,
+        is_generated: true,
+      })),
+    ],
     employees: results[1].data as Employee[],
     categories: results[2].data as EventCategory[],
-    logs: results[3].data as AppData['logs'],
+    logs: results[4].data as AppData['logs'],
   }
 }
 export async function persistEvent(event: CalendarEvent) {

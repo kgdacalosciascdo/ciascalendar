@@ -3,6 +3,7 @@ export interface UserProfile {
   id: string
   full_name: string
   role: Role
+  birth_date?: string | null
   email?: string
 }
 export interface Employee {
@@ -56,6 +57,7 @@ export interface CalendarEvent {
   created_by: string | null
   status: 'confirmed' | 'pending' | 'cancelled'
   visibility: 'office' | 'admin'
+  is_generated?: boolean
   created_at?: string
   updated_at?: string
   employee_leave_details?: EmployeeLeave | null

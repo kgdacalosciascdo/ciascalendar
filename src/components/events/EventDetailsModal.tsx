@@ -131,7 +131,7 @@ export function EventDetailsModal({
               · Created by {event.creator?.full_name || 'System'}
             </span>
           </div>
-          {admin && (
+          {admin && !event.is_generated && (
             <div className="modal-actions">
               <button
                 className="button danger-outline"

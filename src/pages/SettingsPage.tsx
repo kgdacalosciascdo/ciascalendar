@@ -90,6 +90,7 @@ function AddUser() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [birthDate, setBirthDate] = useState('')
   const [role, setRole] = useState<'admin' | 'staff'>('staff')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -100,11 +101,18 @@ function AddUser() {
     setSuccess('')
     setBusy(true)
     try {
-      await createUserAccount({ full_name: fullName, email, password, role })
+      await createUserAccount({
+        full_name: fullName,
+        email,
+        password,
+        role,
+        birth_date: birthDate,
+      })
       setSuccess(`${fullName} can now sign in.`)
       setFullName('')
       setEmail('')
       setPassword('')
+      setBirthDate('')
       setRole('staff')
     } catch (problem) {
       setError(
@@ -118,7 +126,10 @@ function AddUser() {
     <section className="content-panel settings-card password-card">
       <UserPlus size={22} />
       <h2>Add user</h2>
-      <p>Create a simple email-and-password account for CIAS CALENDAR.</p>
+      <p>
+        Create a simple email-and-password account for CIAS CALENDAR. Its
+        birthday will appear on the calendar every year.
+      </p>
       <form onSubmit={submit} className="password-form">
         <label>
           Full name
@@ -149,6 +160,16 @@ function AddUser() {
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="new-password"
             minLength={6}
+            required
+            disabled={busy}
+          />
+        </label>
+        <label>
+          Birthday
+          <input
+            type="date"
+            value={birthDate}
+            onChange={(event) => setBirthDate(event.target.value)}
             required
             disabled={busy}
           />

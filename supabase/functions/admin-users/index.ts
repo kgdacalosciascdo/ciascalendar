@@ -55,12 +55,19 @@ Deno.serve(async (request) => {
   const password = typeof body.password === 'string' ? body.password : ''
   const fullName =
     typeof body.full_name === 'string' ? body.full_name.trim() : ''
+  const birthDate =
+    typeof body.birth_date === 'string' ? body.birth_date.trim() : ''
   const role = body.role === 'admin' ? 'admin' : 'staff'
-  if (!email || !fullName || password.length < 6)
+  if (
+    !email ||
+    !fullName ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) ||
+    password.length < 6
+  )
     return Response.json(
       {
         error:
-          'Name, email, and a password of at least 6 characters are required.',
+          'Name, email, birthday, and a password of at least 6 characters are required.',
       },
       { status: 400, headers: corsHeaders },
     )
@@ -69,16 +76,19 @@ Deno.serve(async (request) => {
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName },
+    user_metadata: { full_name: fullName, birth_date: birthDate },
   })
   if (error || !data.user)
     return Response.json(
       { error: error?.message || 'Unable to create this user.' },
       { status: 400, headers: corsHeaders },
     )
-  const { error: profileError } = await admin
-    .from('profiles')
-    .upsert({ id: data.user.id, full_name: fullName, role })
+  const { error: profileError } = await admin.from('profiles').upsert({
+    id: data.user.id,
+    full_name: fullName,
+    birth_date: birthDate,
+    role,
+  })
   if (profileError)
     return Response.json(
       { error: profileError.message },
