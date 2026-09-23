@@ -15,6 +15,14 @@ test('admin creates, edits, persists, filters, and deletes an event', async ({
   await page
     .getByLabel('Category', { exact: false })
     .selectOption({ label: 'Meeting' })
+  await page
+    .locator('.participant-list label', { hasText: 'Juan Dela Cruz' })
+    .getByRole('checkbox')
+    .check()
+  await page
+    .locator('.participant-list label', { hasText: 'Maria Santos' })
+    .getByRole('checkbox')
+    .check()
   await page.getByLabel('Location').fill('Test room')
   await page.getByRole('button', { name: 'Save event' }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -23,6 +31,9 @@ test('admin creates, edits, persists, filters, and deletes an event', async ({
     .fill('E2E planning')
   await page.locator('.search-results .event-card').click()
   await expect(page.getByRole('dialog')).toContainText('Test room')
+  await expect(page.getByRole('dialog')).toContainText(
+    'Juan Dela Cruz, Maria Santos',
+  )
   await page.getByRole('button', { name: 'Edit event' }).click()
   await page.getByLabel('Event title').fill('E2E updated meeting')
   await page.getByRole('button', { name: 'Save event' }).click()

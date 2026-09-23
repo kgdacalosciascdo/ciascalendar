@@ -294,4 +294,43 @@ describe('PostgreSQL migration, atomic saves, and RLS', () => {
       ),
     ).rejects.toThrow()
   })
+  it('stores multiple event participants and exposes only their links in the public calendar', async () => {
+    await db.exec('reset role')
+    await db.exec(
+      readFileSync(
+        'supabase/migrations/202609230002_event_participants.sql',
+        'utf8',
+      ),
+    )
+    const secondEmployeeId = (
+      await db.query<{ id: string }>(
+        'select id from employees where id <> $1 limit 1',
+        [employeeId],
+      )
+    ).rows[0].id
+    await actAs(adminId)
+    await save({ employee_ids: [employeeId, secondEmployeeId] })
+    expect(
+      (
+        await db.query(
+          'select * from event_employees where event_id=$1 order by employee_id',
+          [eventId],
+        )
+      ).rows,
+    ).toHaveLength(2)
+    await actAs('', 'anon')
+    expect(
+      (
+        await db.query('select * from event_employees where event_id=$1', [
+          eventId,
+        ])
+      ).rows,
+    ).toHaveLength(2)
+    await expect(
+      db.query(
+        'insert into event_employees(event_id,employee_id) values($1,$2)',
+        [eventId, employeeId],
+      ),
+    ).rejects.toThrow()
+  })
 })

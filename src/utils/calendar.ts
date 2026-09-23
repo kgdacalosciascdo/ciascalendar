@@ -20,6 +20,19 @@ export const employeeName = (employee?: Employee) =>
         .join(' ')
     : ''
 export const canManage = (role?: Role) => role === 'admin'
+export function eventEmployeeIds(event: CalendarEvent): string[] {
+  const ids = event.event_employees?.map((link) => link.employee_id) || []
+  if (ids.length) return ids
+  return event.employee_id ? [event.employee_id] : []
+}
+export function eventEmployeeNames(
+  event: CalendarEvent,
+  employees: Employee[],
+) {
+  return eventEmployeeIds(event)
+    .map((id) => employeeName(employees.find((employee) => employee.id === id)))
+    .filter(Boolean)
+}
 export function formatDate(date: string, options?: Intl.DateTimeFormatOptions) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(
     'en-US',
@@ -104,7 +117,8 @@ export function filterEvents(
   return events.filter(
     (event) =>
       filters.categories.includes(event.category_id) &&
-      (!filters.employee || event.employee_id === filters.employee) &&
+      (!filters.employee ||
+        eventEmployeeIds(event).includes(filters.employee)) &&
       (!filters.status || event.status === filters.status) &&
       (!filters.date ||
         (event.start_date <= filters.date &&
@@ -114,7 +128,7 @@ export function filterEvents(
           event.title,
           event.description,
           event.location,
-          employeeName(employees.find((e) => e.id === event.employee_id)),
+          ...eventEmployeeNames(event, employees),
         ].some((value) => value.toLowerCase().includes(query))),
   )
 }

@@ -36,6 +36,9 @@ export interface EmployeeLeave {
 export interface Holiday {
   holiday_type: string
 }
+export interface EventEmployeeLink {
+  employee_id: string
+}
 export interface CalendarEvent {
   id: string
   title: string
@@ -48,6 +51,8 @@ export interface CalendarEvent {
   all_day: boolean
   location: string
   employee_id: string | null
+  employee_ids?: string[]
+  event_employees?: EventEmployeeLink[]
   created_by: string | null
   status: 'confirmed' | 'pending' | 'cancelled'
   visibility: 'office' | 'admin'

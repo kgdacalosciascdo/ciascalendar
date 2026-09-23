@@ -1,9 +1,16 @@
 import { useState, type FormEvent } from 'react'
-import { CheckCircle2, Database, KeyRound, ShieldCheck } from 'lucide-react'
+import {
+  CheckCircle2,
+  Database,
+  KeyRound,
+  ShieldCheck,
+  UserPlus,
+} from 'lucide-react'
 import { useAuth } from '../features/auth/context'
 import { isDemo } from '../lib/supabase'
 import type { CalendarData } from '../hooks/useCalendarData'
 import { EmptyState } from '../components/ui/Shared'
+import { createUserAccount } from '../services/data'
 
 export function SettingsPage({ data }: { data: CalendarData }) {
   const { profile } = useAuth()
@@ -48,6 +55,7 @@ export function SettingsPage({ data }: { data: CalendarData }) {
         )}
       </section>
       <ChangePassword />
+      {profile?.role === 'admin' && <AddUser />}
       {profile?.role === 'admin' && (
         <section className="content-panel activity-panel">
           <div className="section-heading">
@@ -75,6 +83,104 @@ export function SettingsPage({ data }: { data: CalendarData }) {
         </section>
       )}
     </div>
+  )
+}
+
+function AddUser() {
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'admin' | 'staff'>('staff')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setSuccess('')
+    setBusy(true)
+    try {
+      await createUserAccount({ full_name: fullName, email, password, role })
+      setSuccess(`${fullName} can now sign in.`)
+      setFullName('')
+      setEmail('')
+      setPassword('')
+      setRole('staff')
+    } catch (problem) {
+      setError(
+        problem instanceof Error ? problem.message : 'Unable to add user.',
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section className="content-panel settings-card password-card">
+      <UserPlus size={22} />
+      <h2>Add user</h2>
+      <p>Create a simple email-and-password account for CIAS CALENDAR.</p>
+      <form onSubmit={submit} className="password-form">
+        <label>
+          Full name
+          <input
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            autoComplete="name"
+            required
+            disabled={busy}
+          />
+        </label>
+        <label>
+          Email address
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            required
+            disabled={busy}
+          />
+        </label>
+        <label>
+          Temporary password
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="new-password"
+            minLength={6}
+            required
+            disabled={busy}
+          />
+        </label>
+        <label>
+          Calendar role
+          <select
+            value={role}
+            onChange={(event) =>
+              setRole(event.target.value as 'admin' | 'staff')
+            }
+            disabled={busy}
+          >
+            <option value="staff">Staff — view only</option>
+            <option value="admin">Administrator — manage calendar</option>
+          </select>
+        </label>
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+          </div>
+        )}
+        {success && (
+          <p className="password-success" role="status">
+            <CheckCircle2 size={16} /> {success}
+          </p>
+        )}
+        <button className="button primary" disabled={busy}>
+          {busy ? 'Creating user…' : 'Add user'}
+        </button>
+      </form>
+    </section>
   )
 }
 

@@ -100,7 +100,13 @@ export function useCalendarData() {
         ...data,
         events: [
           ...data.events.filter((e) => e.id !== event.id),
-          { ...event, creator: { full_name: profile!.full_name } },
+          {
+            ...event,
+            event_employees: (event.employee_ids || []).map((employee_id) => ({
+              employee_id,
+            })),
+            creator: { full_name: profile!.full_name },
+          },
         ],
       },
       exists ? 'Updated' : 'Created',

@@ -330,7 +330,7 @@ export default function AppShell() {
         <EventDetailsModal
           event={selected}
           category={data.categories.find((c) => c.id === selected.category_id)}
-          employee={data.employees.find((e) => e.id === selected.employee_id)}
+          employees={data.employees}
           admin={admin}
           onClose={() => setSelected(null)}
           onEdit={() => {

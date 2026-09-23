@@ -7,7 +7,12 @@ import type {
   EventCategory,
   EmployeeLeave,
 } from '../../types'
-import { dateKey, employeeName, validateEvent } from '../../utils/calendar'
+import {
+  dateKey,
+  employeeName,
+  eventEmployeeIds,
+  validateEvent,
+} from '../../utils/calendar'
 
 const leaveTypes = [
   'Vacation Leave',
@@ -46,33 +51,41 @@ export function EventFormModal({
   onSave: (event: CalendarEvent) => Promise<void>
 }) {
   const [value, setValue] = useState<CalendarEvent>(
-    event || {
-      id: crypto.randomUUID(),
-      title: '',
-      description: '',
-      category_id: categories.find((c) => c.active)?.id || '',
-      start_date: date || dateKey(),
-      end_date: null,
-      all_day: true,
-      start_time: null,
-      end_time: null,
-      location: '',
-      employee_id: null,
-      status: 'confirmed',
-      visibility: 'office',
-      created_by: userId === 'demo' ? null : userId,
-    },
+    event
+      ? { ...event, employee_ids: eventEmployeeIds(event) }
+      : {
+          id: crypto.randomUUID(),
+          title: '',
+          description: '',
+          category_id: categories.find((c) => c.active)?.id || '',
+          start_date: date || dateKey(),
+          end_date: null,
+          all_day: true,
+          start_time: null,
+          end_time: null,
+          location: '',
+          employee_id: null,
+          employee_ids: [],
+          status: 'confirmed',
+          visibility: 'office',
+          created_by: userId === 'demo' ? null : userId,
+        },
   )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const category = categories.find((c) => c.id === value.category_id)
   const isLeave = category?.name === 'Employee Leave'
   const isHoliday = category?.name === 'Holiday'
+  const participantIds = value.employee_ids || []
   function update<K extends keyof CalendarEvent>(
     key: K,
     next: CalendarEvent[K],
   ) {
     setValue((old) => ({ ...old, [key]: next }))
+  }
+  function setParticipants(ids: string[]) {
+    update('employee_ids', ids)
+    update('employee_id', ids[0] || null)
   }
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -93,6 +106,11 @@ export function EventFormModal({
             notes: value.employee_leave_details?.notes || '',
           }
         : null,
+      employee_ids: isLeave
+        ? value.employee_id
+          ? [value.employee_id]
+          : []
+        : participantIds,
       holiday_details: isHoliday
         ? {
             holiday_type:
@@ -218,27 +236,87 @@ export function EventFormModal({
               </label>
             </div>
           )}
-          <label>
-            Employee {isLeave && <span className="required">*</span>}
-            <select
-              aria-label="Employee"
-              value={value.employee_id || ''}
-              onChange={(e) => update('employee_id', e.target.value || null)}
-              required={isLeave}
-            >
-              <option value="">
-                {isLeave ? 'Select an employee' : 'Not linked to an employee'}
-              </option>
-              {employees
-                .filter((e) => e.active || e.id === value.employee_id)
-                .map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {employeeName(e)}
-                    {!e.active ? ' (inactive)' : ''}
-                  </option>
-                ))}
-            </select>
-          </label>
+          {isLeave ? (
+            <label>
+              Employee <span className="required">*</span>
+              <select
+                aria-label="Employee"
+                value={value.employee_id || ''}
+                onChange={(e) =>
+                  setParticipants(e.target.value ? [e.target.value] : [])
+                }
+                required
+              >
+                <option value="">Select an employee</option>
+                {employees
+                  .filter((e) => e.active || e.id === value.employee_id)
+                  .map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {employeeName(e)}
+                      {!e.active ? ' (inactive)' : ''}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ) : (
+            <div className="participants-field">
+              <div className="participants-heading">
+                <div>
+                  <strong>Participants</strong>
+                  <span>Link employees to this event.</span>
+                </div>
+                <button
+                  className="text-button"
+                  type="button"
+                  onClick={() =>
+                    setParticipants(
+                      participantIds.length ===
+                        employees.filter((employee) => employee.active).length
+                        ? []
+                        : employees
+                            .filter((employee) => employee.active)
+                            .map((employee) => employee.id),
+                    )
+                  }
+                >
+                  {participantIds.length ===
+                  employees.filter((employee) => employee.active).length
+                    ? 'Clear all'
+                    : 'Select all'}
+                </button>
+              </div>
+              <div className="participant-list">
+                {employees
+                  .filter(
+                    (employee) =>
+                      employee.active || participantIds.includes(employee.id),
+                  )
+                  .map((employee) => (
+                    <label className="participant-option" key={employee.id}>
+                      <input
+                        type="checkbox"
+                        checked={participantIds.includes(employee.id)}
+                        onChange={(e) =>
+                          setParticipants(
+                            e.target.checked
+                              ? [...participantIds, employee.id]
+                              : participantIds.filter(
+                                  (id) => id !== employee.id,
+                                ),
+                          )
+                        }
+                      />
+                      <span>{employeeName(employee)}</span>
+                    </label>
+                  ))}
+              </div>
+              <small>
+                {participantIds.length
+                  ? `${participantIds.length} selected`
+                  : 'No employees linked'}
+              </small>
+            </div>
+          )}
           {isLeave && (
             <div className="conditional-fields">
               <span className="eyebrow">LEAVE INFORMATION</span>

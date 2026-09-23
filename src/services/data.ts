@@ -1,6 +1,20 @@
 import { supabase } from '../lib/supabase'
 import type { AppData, CalendarEvent, Employee, EventCategory } from '../types'
 
+export async function createUserAccount(input: {
+  full_name: string
+  email: string
+  password: string
+  role: 'admin' | 'staff'
+}) {
+  if (!supabase) throw new Error('Supabase is not configured.')
+  const { data, error } = await supabase.functions.invoke('admin-users', {
+    body: input,
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+}
+
 export async function fetchData(
   admin: boolean,
   publicView = false,
@@ -9,12 +23,14 @@ export async function fetchData(
   const events = publicView
     ? supabase
         .from('events')
-        .select('*, employee_leave_details(*), holiday_details(*)')
+        .select(
+          '*, employee_leave_details(*), holiday_details(*), event_employees(employee_id)',
+        )
         .order('start_date')
     : supabase
         .from('events')
         .select(
-          '*, employee_leave_details(*), holiday_details(*), creator:profiles!events_created_by_fkey(full_name)',
+          '*, employee_leave_details(*), holiday_details(*), event_employees(employee_id), creator:profiles!events_created_by_fkey(full_name)',
         )
         .order('start_date')
   const employees = publicView

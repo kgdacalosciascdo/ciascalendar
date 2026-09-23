@@ -9,13 +9,17 @@ import {
 } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { CategoryBadge } from '../ui/Shared'
-import { employeeName, formatDate, formatTime } from '../../utils/calendar'
+import {
+  eventEmployeeNames,
+  formatDate,
+  formatTime,
+} from '../../utils/calendar'
 import type { CalendarEvent, Employee, EventCategory } from '../../types'
 
 export function EventDetailsModal({
   event,
   category,
-  employee,
+  employees,
   admin,
   onClose,
   onEdit,
@@ -23,7 +27,7 @@ export function EventDetailsModal({
 }: {
   event: CalendarEvent
   category?: EventCategory
-  employee?: Employee
+  employees: Employee[]
   admin: boolean
   onClose: () => void
   onEdit: () => void
@@ -32,6 +36,7 @@ export function EventDetailsModal({
   const [confirm, setConfirm] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const participantNames = eventEmployeeNames(event, employees)
   async function remove() {
     setBusy(true)
     try {
@@ -94,10 +99,10 @@ export function EventDetailsModal({
                 {event.location}
               </p>
             )}
-            {employee && (
+            {participantNames.length > 0 && (
               <p>
                 <UserRound size={18} />
-                {employeeName(employee)}
+                {participantNames.join(', ')}
               </p>
             )}
           </div>
